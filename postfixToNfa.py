@@ -17,11 +17,9 @@ class State:
 
 
 def postfix_to_nfa(postfix):
-    # Initialize the stack and state counter
     stack = []
     state_counter = 0
 
-    # Iterate over each character in the postfix expression
     for char in postfix:
         if char == '.':
             # Pop the top two NFAs from the stack
@@ -94,26 +92,21 @@ def postfix_to_nfa(postfix):
 
     # The final NFA is the only element left on the stack
     final_nfa = stack.pop()
-
     # Return the NFA's components as separate iterables
     return final_nfa['initial'], final_nfa['final'], final_nfa['transitions']
 
 
 
 def to_dot(initial_state, final_states, transitions):
-    # Find the minimum state number in the transitions
     min_state = min(min(t[0], t[2]) for t in transitions)
 
-    # Create the DOT graph header
     dot_graph = 'digraph {\n\trankdir=LR;\n'
 
-    # Add nodes for all states
     for state in set([t[0] for t in transitions] + [t[2] for t in transitions]):
         state -= min_state
         shape = 'doublecircle' if state in final_states else 'circle'
         dot_graph += f'\t{state} [shape={shape}];\n'
 
-    # Add transitions between states
     for transition in transitions:
         source_state, input_symbol, target_state = transition
         source_state -= min_state
@@ -121,11 +114,9 @@ def to_dot(initial_state, final_states, transitions):
         label = 'ε' if input_symbol is None else input_symbol
         dot_graph += f'\t{source_state} -> {target_state} [label="{label}"];\n'
 
-    # Add a start node and edge to the initial state
     initial_state -= min_state
     dot_graph += f'\tstart [shape=none,label=""];\n\tstart -> {initial_state};\n'
 
-    # Add the DOT graph footer
     dot_graph += '}'
 
     return dot_graph
