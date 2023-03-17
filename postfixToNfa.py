@@ -1,123 +1,221 @@
+import graphviz
+
+
+class Nodo:
+    def __init__(self, value, left=None, right=None):
+        self.value = value
+        self.left = left
+        self.right = right
+        self.transitions = {}
+
+    def es_hoja(self):
+        return self.left is None and self.right is None
+
+
 class State:
-    def __init__(self, isEnd=False, transition=None, epsilonTransitions=None):
-        if transition is None:
-            transition = {}
-        if epsilonTransitions is None:
-            epsilonTransitions = []
-        self.isEnd = isEnd
-        self.transition = transition
-        self.epsilonTransitions = epsilonTransitions
+    ids = 0
+
+    def __init__(self):
+        self.id = State.ids
+        State.ids += 1
+        self.transiciones = {}
+        self.epsilon_transitions = set()
+
+    def add_trans(self, simbolo, estado):
+        if simbolo in self.transiciones:
+            if estado not in self.transiciones[simbolo]:
+                # MAYBE cambiar .add(estado) por = estado
+                self.transiciones[simbolo].add(estado)
+        else:
+            self.transiciones[simbolo] = {estado}
+
+    def add_epsilon_trans(self, estado):
+        self.epsilon_transitions.add(estado)
+
+    def get_trans(self, simbolo):
+        return self.transiciones.get(simbolo, set())
+
+    def get_epsilon_trans(self):
+        return self.epsilon_transitions
 
     def __str__(self):
-        transition_str = ", ".join(f"{char} -> {state}" for char, state in self.transition.items())
-        epsilon_str = ", ".join(str(state) for state in self.epsilonTransitions)
-        return f"State(transition={{ {transition_str} }}, epsilon={{ {epsilon_str} }}, isEnd={self.isEnd})"
+        return f'{self.id}'
+
+
+class FNA:
+    def __init__(self, inicial, final):
+        self.inicial = inicial
+        self.final = final
+
+    def match(self, cadena):
+        estados_actuales = {self.inicial}
+        for simbolo in cadena:
+            nuevos_estados = set()
+            for state in estados_actuales:
+                nuevos_estados |= state.get_trans(simbolo)
+                nuevos_estados |= state.get_epsilon_trans()
+            estados_actuales = nuevos_estados
+        return self.final in estados_actuales
+
+    def __str__(self):
+        visitados = set()
+        nodos = [self.inicial]
+        transiciones = []
+
+        print('transiciones: \n')
+
+        while nodos:
+            nodo = nodos.pop()
+            visitados.add(nodo)
+
+            for simbolo, estados_destino in nodo.transiciones.items():
+                for estado_destino in estados_destino:
+                    transiciones.append((nodo, estado_destino, simbolo))
+                    if estado_destino not in visitados:
+                        nodos.append(estado_destino)
+
+            for estado_destino in nodo.epsilon_transitions:
+                transiciones.append((nodo, estado_destino, 'ε'))
+                if estado_destino not in visitados:
+                    nodos.append(estado_destino)
+
+        transiciones_str = [
+            f'{str(e1)} --{s}--> {str(e2)}' for e1, e2, s in transiciones]
+
+        return '\n'.join(transiciones_str)
 
 
 
-
-def postfix_to_nfa(postfix):
+def construir_arbol(postfix):
     stack = []
-    state_counter = 0
-
-    for char in postfix:
-        if char == '.':
-            # Pop the top two NFAs from the stack
-            nfa2 = stack.pop()
-            nfa1 = stack.pop()
-
-            # Add epsilon transitions from nfa1's final state to nfa2's initial state
-            for state in nfa1['final']:
-                nfa1['transitions'].append((state, None, nfa2['initial']))
-
-            # Combine the NFAs into a new NFA
-            new_nfa = {
-                'initial': nfa1['initial'],
-                'final': nfa2['final'],
-                'transitions': nfa1['transitions'] + nfa2['transitions']
-            }
-
-            # Push the new NFA onto the stack
-            stack.append(new_nfa)
-
-        elif char == '|':
-            # Pop the top two NFAs from the stack
-            nfa2 = stack.pop()
-            nfa1 = stack.pop()
-
-            # Create a new initial and final state and add epsilon transitions to the initial states of nfa1 and nfa2
-            initial_state = state_counter
-            state_counter += 1
-            final_state = state_counter
-            state_counter += 1
-            nfa = {
-                'initial': initial_state,
-                'final': [final_state],
-                'transitions': [(initial_state, None, nfa1['initial']), (initial_state, None, nfa2['initial'])] + nfa1['transitions'] + nfa2['transitions'] + [(state, None, final_state) for state in nfa1['final']] + [(state, None, final_state) for state in nfa2['final']]
-            }
-
-            # Push the new NFA onto the stack
-            stack.append(nfa)
-
-        elif char == '*':
-            # Pop the top NFA from the stack
-            nfa1 = stack.pop()
-
-            # Create a new initial state and add epsilon transitions to nfa1's initial state and final states
-            initial_state = state_counter
-            state_counter += 1
-            nfa = {
-                'initial': initial_state,
-                'final': nfa1['final'] + [initial_state],
-                'transitions': [(initial_state, None, nfa1['initial']), (initial_state, None, state_counter)] + nfa1['transitions']
-            }
-
-            # Push the new NFA onto the stack
-            stack.append(nfa)
-
+    for c in postfix:
+        if c == '*' or c == '?' or c == '+':
+            child = stack.pop()
+            node = Nodo(c, child)
+            stack.append(node)
+        elif c == '.' or c == '|':
+            right_child = stack.pop()
+            left_child = stack.pop()
+            node = Nodo(c, left_child, right_child)
+            stack.append(node)
         else:
-            # Create a new initial and final state and add a transition between them
-            initial_state = state_counter
-            state_counter += 1
-            final_state = state_counter
-            state_counter += 1
-            nfa = {
-                'initial': initial_state,
-                'final': [final_state],
-                'transitions': [(initial_state, char, final_state)]
-            }
-
-            # Push the new NFA onto the stack
-            stack.append(nfa)
-
-    # The final NFA is the only element left on the stack
-    final_nfa = stack.pop()
-    # Return the NFA's components as separate iterables
-    return final_nfa['initial'], final_nfa['final'], final_nfa['transitions']
+            node = Nodo(c)
+            stack.append(node)
+    return stack[0]
 
 
+def print_arbol(nodo, archivo):
+    dot = graphviz.Digraph(comment='Árbol sintáctico')
+    _agregar_nodo(dot, nodo)
+    dot.render(archivo, view=True)
 
-def to_dot(initial_state, final_states, transitions):
-    min_state = min(min(t[0], t[2]) for t in transitions)
 
-    dot_graph = 'digraph {\n\trankdir=LR;\n'
+def _agregar_nodo(dot, nodo):
+    if nodo is None:
+        return
+    _agregar_nodo(dot, nodo.left)
+    _agregar_nodo(dot, nodo.right)
+    dot.node(str(nodo), str(nodo.value))
+    if nodo.left is not None:
+        dot.edge(str(nodo), str(nodo.left))
+    if nodo.right is not None:
+        dot.edge(str(nodo), str(nodo.right))
 
-    for state in set([t[0] for t in transitions] + [t[2] for t in transitions]):
-        state -= min_state
-        shape = 'doublecircle' if state in final_states else 'circle'
-        dot_graph += f'\t{state} [shape={shape}];\n'
 
-    for transition in transitions:
-        source_state, input_symbol, target_state = transition
-        source_state -= min_state
-        target_state -= min_state
-        label = 'ε' if input_symbol is None else input_symbol
-        dot_graph += f'\t{source_state} -> {target_state} [label="{label}"];\n'
+def construir_FNA_desde_arbol(nodo):
+    if nodo.value == '.':
+        afn1 = construir_FNA_desde_arbol(nodo.left)
+        afn2 = construir_FNA_desde_arbol(nodo.right)
+        afn1.final.add_epsilon_trans(afn2.inicial)
+        afn1.final = afn2.final
+        return afn1
+    elif nodo.value == '|':
+        afn1 = construir_FNA_desde_arbol(nodo.left)
+        afn2 = construir_FNA_desde_arbol(nodo.right)
+        inicial = State()
+        inicial.add_epsilon_trans(afn1.inicial)
+        inicial.add_epsilon_trans(afn2.inicial)
+        final = State()
+        afn1.final.add_epsilon_trans(final)
+        afn2.final.add_epsilon_trans(final)
+        return FNA(inicial, final)
+    elif nodo.value == '*':
+        afn = construir_FNA_desde_arbol(nodo.left)
+        inicial = State()
+        final = State()
+        inicial.add_epsilon_trans(afn.inicial)
+        inicial.add_epsilon_trans(final)
+        afn.final.add_epsilon_trans(afn.inicial)
+        afn.final.add_epsilon_trans(final)
+        return FNA(inicial, final)
+    elif nodo.value == '+':
+        afn1 = construir_FNA_desde_arbol(nodo.left)
+        afn2 = construir_FNA_desde_arbol(nodo.left)
+        inicial = State()
+        final = State()
+        inicial.add_trans(nodo.left.value, afn1.final)
+        # inicial.add_epsilon_trans(afn1.inicial)
+        afn1.final.add_epsilon_trans(afn2.inicial)
+        afn1.final.add_epsilon_trans(final)
+        afn2.inicial.add_trans(nodo.left.value, afn2.final)
+        afn2.final.add_epsilon_trans(afn2.inicial)
+        afn2.final.add_epsilon_trans(final)
+        return FNA(inicial, final)
+    elif nodo.value == '?':
+        afn = construir_FNA_desde_arbol(nodo.left)
+        inicial = State()
+        final = State()
+        inicial.add_epsilon_trans(afn.inicial)
+        inicial.add_epsilon_trans(final)
+        afn.final.add_epsilon_trans(final)
+        return FNA(inicial, final)
+    else:
+        estado_inicial = State()
+        estado_final = State()
+        estado_inicial.add_trans(nodo.value, estado_final)
+        return FNA(estado_inicial, estado_final)
 
-    initial_state -= min_state
-    dot_graph += f'\tstart [shape=none,label=""];\n\tstart -> {initial_state};\n'
 
-    dot_graph += '}'
+def generar_grafo_FNA(afn, x):
+    visitados = set()
+    nodos = [afn.inicial]
+    nodos_finales = {afn.final}
+    transiciones = []
 
-    return dot_graph
+    if x==1:
+        name='fna'
+    elif x==2:
+        name='dfa'
 
+    g = graphviz.Digraph('FNA', filename=('output/'+name), format='pdf')
+    g.attr(rankdir='LR', size='8,5')
+
+    while nodos:
+        nodo = nodos.pop()
+        visitados.add(nodo)
+
+        if nodo in nodos_finales:
+            # Doble círculo si es estado final
+            nodo_attrs = {'peripheries': '2', 'color': 'red'}
+        elif nodo == afn.inicial:
+            nodo_attrs = {'color': 'blue'}  # Color rojo si es estado inicial
+        else:
+            nodo_attrs = {}
+
+        g.node(str(nodo), label=str(nodo), **nodo_attrs)
+
+        for simbolo, estados_destino in nodo.transiciones.items():
+            for estado_destino in estados_destino:
+                transiciones.append((nodo, estado_destino, simbolo))
+                if estado_destino not in visitados:
+                    nodos.append(estado_destino)
+
+        for estado_destino in nodo.epsilon_transitions:
+            transiciones.append((nodo, estado_destino, 'ε'))
+            if estado_destino not in visitados:
+                nodos.append(estado_destino)
+
+    for e1, e2, s in transiciones:
+        g.edge(str(e1), str(e2), label=s)
+
+    g.view()
