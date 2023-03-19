@@ -1,31 +1,25 @@
-#from infixToPostfix import *
-#from postfixToNfa import *
-
-'''/
-/regex="ab*ab*"
-/postfix = to_postfix(insert_explicit_concat_operator(regex))
-/print(postfix)
-/
-/
-/initial_state, final_states, transitions = postfix_to_nfa(postfix)
-/print(initial_state, final_states, transitions)
-/
-/print()
-/dot = to_dot(initial_state, final_states, transitions)
-/print(dot)
-'''
-
 import infixToPostfix as pos
 from postfixToNfa import *
+from funcs import *
+from Tree import *
+from Sim import *
+from operators import *
+from AugmentRegex import *
+
+
 import sys
 
+ABC = [letter for letter in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ#0123456789\u03B5']
+IMAGES_DIRECTORY = '/output/'
 
 inicio = 0
 fin = 0
 
-regex = input('Ingrese la Expresion regular: ')
+regex = input('Ingrese una expresion regular r: ')
 if regex == '':
     regex = 'ε'
+
+cadena = input('Ingrese una cadena w a ser validada: ')
 
 for caracter in regex:
     if caracter == '(':
@@ -38,18 +32,21 @@ if inicio > fin or fin > inicio:
           'PARENTESIS INICIALES Y ', fin, 'PARENTESIS FINALES.')
     sys.exit()
 else:
-    print('Expresion Infix:', regex)
-    concatRegex = pos.insert_explicit_concat_operator(regex)
-    print('Expresion con el operador de concatenacion: ', concatRegex)
-    postfix = pos.to_postfix(concatRegex)
-    print('Expresion Postfix: ', postfix)
-
+    print('Regex:', regex)
+    reg = pos.insert_explicit_concat_operator(regex)
+    postfix = pos.to_postfix(reg)
+    print('Postfix: ', postfix)
 
     tree = construir_arbol(postfix)
-    print_arbol(tree, 'output/arbol sintactico')
+    print_arbol(tree, 'output/arbol')
     fna = construir_FNA_desde_arbol(tree)
     print(fna)
-    g = generar_grafo_FNA(fna,1)
-
-
+    g = generar_grafo_FNA(fna)
     
+    
+    
+    #yesno = use_direct(regex, cadena)
+    augmented_regex = augment_regex(postfix)
+    #     (a.b*.a.b*).#
+    print(augmented_regex)
+

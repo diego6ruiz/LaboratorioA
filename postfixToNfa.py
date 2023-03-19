@@ -1,7 +1,7 @@
 import graphviz
 
 
-class Nodo:
+class NodoNFA:
     def __init__(self, value, left=None, right=None):
         self.value = value
         self.left = left
@@ -91,15 +91,15 @@ def construir_arbol(postfix):
     for c in postfix:
         if c == '*' or c == '?' or c == '+':
             child = stack.pop()
-            node = Nodo(c, child)
+            node = NodoNFA(c, child)
             stack.append(node)
         elif c == '.' or c == '|':
             right_child = stack.pop()
             left_child = stack.pop()
-            node = Nodo(c, left_child, right_child)
+            node = NodoNFA(c, left_child, right_child)
             stack.append(node)
         else:
-            node = Nodo(c)
+            node = NodoNFA(c)
             stack.append(node)
     return stack[0]
 
@@ -154,7 +154,6 @@ def construir_FNA_desde_arbol(nodo):
         inicial = State()
         final = State()
         inicial.add_trans(nodo.left.value, afn1.final)
-        # inicial.add_epsilon_trans(afn1.inicial)
         afn1.final.add_epsilon_trans(afn2.inicial)
         afn1.final.add_epsilon_trans(final)
         afn2.inicial.add_trans(nodo.left.value, afn2.final)
@@ -176,18 +175,15 @@ def construir_FNA_desde_arbol(nodo):
         return FNA(estado_inicial, estado_final)
 
 
-def generar_grafo_FNA(afn, x):
+def generar_grafo_FNA(afn):
     visitados = set()
     nodos = [afn.inicial]
     nodos_finales = {afn.final}
     transiciones = []
 
-    if x==1:
-        name='fna'
-    elif x==2:
-        name='dfa'
 
-    g = graphviz.Digraph('FNA', filename=('output/'+name), format='pdf')
+
+    g = graphviz.Digraph('FNA', filename=('output/fna'), format='pdf')
     g.attr(rankdir='LR', size='8,5')
 
     while nodos:
