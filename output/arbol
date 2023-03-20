@@ -1,20 +1,20 @@
 // Árbol sintáctico
 digraph {
-	<postfixToNfa.NodoNFA object at 0x000001E01CC180A0> [label=a]
-	<postfixToNfa.NodoNFA object at 0x000001E01CADF430> [label=b]
-	<postfixToNfa.NodoNFA object at 0x000001E01CADF4F0> [label="*"]
-	<postfixToNfa.NodoNFA object at 0x000001E01CADF4F0> -> <postfixToNfa.NodoNFA object at 0x000001E01CADF430>
-	<postfixToNfa.NodoNFA object at 0x000001E01C1B52E0> [label="."]
-	<postfixToNfa.NodoNFA object at 0x000001E01C1B52E0> -> <postfixToNfa.NodoNFA object at 0x000001E01CC180A0>
-	<postfixToNfa.NodoNFA object at 0x000001E01C1B52E0> -> <postfixToNfa.NodoNFA object at 0x000001E01CADF4F0>
-	<postfixToNfa.NodoNFA object at 0x000001E01C1B5340> [label=a]
-	<postfixToNfa.NodoNFA object at 0x000001E01C1B55B0> [label="."]
-	<postfixToNfa.NodoNFA object at 0x000001E01C1B55B0> -> <postfixToNfa.NodoNFA object at 0x000001E01C1B52E0>
-	<postfixToNfa.NodoNFA object at 0x000001E01C1B55B0> -> <postfixToNfa.NodoNFA object at 0x000001E01C1B5340>
-	<postfixToNfa.NodoNFA object at 0x000001E01C19EFD0> [label=b]
-	<postfixToNfa.NodoNFA object at 0x000001E01C19E070> [label="*"]
-	<postfixToNfa.NodoNFA object at 0x000001E01C19E070> -> <postfixToNfa.NodoNFA object at 0x000001E01C19EFD0>
-	<postfixToNfa.NodoNFA object at 0x000001E01C19E850> [label="."]
-	<postfixToNfa.NodoNFA object at 0x000001E01C19E850> -> <postfixToNfa.NodoNFA object at 0x000001E01C1B55B0>
-	<postfixToNfa.NodoNFA object at 0x000001E01C19E850> -> <postfixToNfa.NodoNFA object at 0x000001E01C19E070>
+	<postfixToNfa.NodoNFA object at 0x0000024B35F45F70> [label=a]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A802E0> [label=b]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A802B0> [label="*"]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A802B0> -> <postfixToNfa.NodoNFA object at 0x0000024B34A802E0>
+	<postfixToNfa.NodoNFA object at 0x0000024B34A80AF0> [label="."]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A80AF0> -> <postfixToNfa.NodoNFA object at 0x0000024B35F45F70>
+	<postfixToNfa.NodoNFA object at 0x0000024B34A80AF0> -> <postfixToNfa.NodoNFA object at 0x0000024B34A802B0>
+	<postfixToNfa.NodoNFA object at 0x0000024B34A80B80> [label=a]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A800A0> [label="."]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A800A0> -> <postfixToNfa.NodoNFA object at 0x0000024B34A80AF0>
+	<postfixToNfa.NodoNFA object at 0x0000024B34A800A0> -> <postfixToNfa.NodoNFA object at 0x0000024B34A80B80>
+	<postfixToNfa.NodoNFA object at 0x0000024B34A80100> [label=b]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A80160> [label="*"]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A80160> -> <postfixToNfa.NodoNFA object at 0x0000024B34A80100>
+	<postfixToNfa.NodoNFA object at 0x0000024B34A801C0> [label="."]
+	<postfixToNfa.NodoNFA object at 0x0000024B34A801C0> -> <postfixToNfa.NodoNFA object at 0x0000024B34A800A0>
+	<postfixToNfa.NodoNFA object at 0x0000024B34A801C0> -> <postfixToNfa.NodoNFA object at 0x0000024B34A80160>
 }

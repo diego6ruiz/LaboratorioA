@@ -32,15 +32,12 @@ class Nodo:
         return finalState + 1
 
     def operacionesBase(self, corrPos):
-
         self.hijos = []
-
         if self.re == 'ε':
             self.pos = None
             corrPos = corrPos - 1
         else:
             self.pos = corrPos
-
         if self.re == 'ε':
             self.anulable = True
         else:
@@ -58,7 +55,7 @@ class Nodo:
 
         return corrPos + 1
 
-    def transicionOrAFN(self, left, right, correlative):
+    def transicionOrFNA(self, left, right, correlative):
         finalState = correlative + 1
 
         self.symbols = ['ε'] + left.symbols + right.symbols
@@ -90,7 +87,7 @@ class Nodo:
 
         return finalState + 1
 
-    def concatAFN(self, left, right, correlative):
+    def transicionConcatFNA(self, left, right, correlative):
         self.symbols = left.symbols + right.symbols
         self.symbols = list(dict.fromkeys(self.symbols))
 
@@ -109,7 +106,7 @@ class Nodo:
 
         return correlative
 
-    def CerraduraAFN(self, nodo, correlative):
+    def transicionCerraduraFNA(self, nodo, correlative):
         finalState = correlative + 1
 
         self.symbols = ['ε'] + nodo.symbols
@@ -138,7 +135,7 @@ class Nodo:
 
         return finalState + 1
 
-    def CerraduraPositivaAFN(self, nodo, correlative):
+    def transicionCerraduraPositivaFNA(self, nodo, correlative):
 
         finalState = correlative + 1
 
@@ -217,7 +214,7 @@ class Nodo:
 
         return finalState + 1 + extra
 
-    def transicionCerraduraInterogationAFN(self, nodo, correlative):
+    def transicionCerraduraInterogationFNA(self, nodo, correlative):
 
         nodoEpsilon = Nodo('ε')
         correlative = nodoEpsilon.transicionBase(correlative)
@@ -284,7 +281,7 @@ class Nodo:
 
         return conjuntoM
 
-    def transicionOrAFD(self, left, right):
+    def transicionOrFDA(self, left, right):
         if left.anulable or right.anulable:
             self.anulable = True
         else:
@@ -296,7 +293,7 @@ class Nodo:
 
         self.typeNodo = '|'
 
-    def transicionConcatAFD(self, left, right):
+    def transicionConcatFDA(self, left, right):
 
         if left.anulable and right.anulable:
             self.anulable = True
@@ -318,7 +315,7 @@ class Nodo:
 
         self.hijos = [left, right]
 
-    def transicionCerraduraAFD(self, nodo):
+    def transicionCerraduraFDA(self, nodo):
 
         self.anulable = True
 

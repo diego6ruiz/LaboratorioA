@@ -1,4 +1,5 @@
 import graphviz
+from Nodo import Nodo
 
 
 class NodoNFA:
@@ -140,13 +141,13 @@ def construir_FNA_desde_arbol(nodo):
         afn2.final.add_epsilon_trans(final)
         return FNA(inicial, final)
     elif nodo.value == '*':
-        afn = construir_FNA_desde_arbol(nodo.left)
+        fna = construir_FNA_desde_arbol(nodo.left)
         inicial = State()
         final = State()
-        inicial.add_epsilon_trans(afn.inicial)
+        inicial.add_epsilon_trans(fna.inicial)
         inicial.add_epsilon_trans(final)
-        afn.final.add_epsilon_trans(afn.inicial)
-        afn.final.add_epsilon_trans(final)
+        fna.final.add_epsilon_trans(fna.inicial)
+        fna.final.add_epsilon_trans(final)
         return FNA(inicial, final)
     elif nodo.value == '+':
         afn1 = construir_FNA_desde_arbol(nodo.left)
@@ -161,12 +162,12 @@ def construir_FNA_desde_arbol(nodo):
         afn2.final.add_epsilon_trans(final)
         return FNA(inicial, final)
     elif nodo.value == '?':
-        afn = construir_FNA_desde_arbol(nodo.left)
+        fna = construir_FNA_desde_arbol(nodo.left)
         inicial = State()
         final = State()
-        inicial.add_epsilon_trans(afn.inicial)
+        inicial.add_epsilon_trans(fna.inicial)
         inicial.add_epsilon_trans(final)
-        afn.final.add_epsilon_trans(final)
+        fna.final.add_epsilon_trans(final)
         return FNA(inicial, final)
     else:
         estado_inicial = State()
@@ -175,10 +176,10 @@ def construir_FNA_desde_arbol(nodo):
         return FNA(estado_inicial, estado_final)
 
 
-def generar_grafo_FNA(afn):
+def generar_grafo_FNA(fna):
     visitados = set()
-    nodos = [afn.inicial]
-    nodos_finales = {afn.final}
+    nodos = [fna.inicial]
+    nodos_finales = {fna.final}
     transiciones = []
 
 
@@ -191,10 +192,9 @@ def generar_grafo_FNA(afn):
         visitados.add(nodo)
 
         if nodo in nodos_finales:
-            # Doble círculo si es estado final
             nodo_attrs = {'peripheries': '2', 'color': 'red'}
-        elif nodo == afn.inicial:
-            nodo_attrs = {'color': 'blue'}  # Color rojo si es estado inicial
+        elif nodo == fna.inicial:
+            nodo_attrs = {'color': 'blue'}
         else:
             nodo_attrs = {}
 
@@ -215,3 +215,102 @@ def generar_grafo_FNA(afn):
         g.edge(str(e1), str(e2), label=s)
 
     g.view()
+
+def isOperator(a):
+    if a == '+' or a == '*' or a == '?' or a == '|':
+        return True
+    return False
+
+def orFNA(nodos, auxNod, corr):
+    nodo = Nodo('')
+    corr = nodo.transicionOrFNA(nodos[0], auxNod, corr)
+    return nodo, corr
+
+def concatFNA(nodos, auxNod, corr):
+    nodo = Nodo('')
+    corr = nodo.transicionConcatFNA(nodos[0], auxNod, corr)
+    return nodo, corr
+
+def cerraduraFNA(nodos, corr):
+    nodo = Nodo('')
+    corr = nodo.transicionCerraduraFNA(nodos[0], corr)
+    return nodo, corr
+
+def cerraduraPositivaFNA(nodos, corr):
+    nodo = Nodo('')
+    corr = nodo.transicionCerraduraPositivaFNA(nodos[0], corr)
+    return nodo, corr
+
+def cerraduraInterogationFNA(nodos, corr):
+    nodo = Nodo('')
+    corr = nodo.transicionCerraduraInterogationFNA(nodos[0], corr)
+    return nodo, corr
+
+def regexToNodes(reArray, corr):
+    for nodo in range(len(reArray)):
+        if type(reArray[nodo]) == list:
+            _, corr = regexToNodes(reArray[nodo], corr)
+        else:
+            if not isOperator(reArray[nodo]):
+                nuevoNodo = Nodo(reArray[nodo])
+                corr = nuevoNodo.transicionBase(corr)
+                reArray[nodo] = nuevoNodo
+    return reArray, corr
+
+def treeToFNA(reArray, corr, nodeCounter):
+    nodos = []
+    op = ''
+
+    for nodo in range(len(reArray)):
+        if type(reArray[nodo]) == list:
+            nodo, corr = treeToFNA(reArray[nodo], corr, 0)
+
+            if nodeCounter > 0:
+                if nodeCounter > 0 and nodeCounter < 2 and op != '|':
+                    nodoNuevo, corr = concatFNA(nodos, nodo, corr)
+                    nodos = [nodoNuevo]
+                    nodeCounter = 1
+
+                elif nodeCounter > 0 and nodeCounter < 2 and op == '|':
+                    nodoNuevo, corr = orFNA(nodos, nodo, corr)
+                    nodos = [nodoNuevo]
+                    nodeCounter = 1
+                    op = ''
+            else:
+                nodos.append(nodo)
+                nodeCounter += 1
+        else:
+            if nodeCounter > 0:
+                if (reArray[nodo] == '+' or reArray[nodo] == '*' or reArray[nodo] == '?') and nodeCounter == 1:
+                    if reArray[nodo] == '*':
+                        nodoNuevo, corr = cerraduraFNA(nodos, corr)
+                        nodos = [nodoNuevo]
+                        nodeCounter = 1
+
+                    if reArray[nodo] == '+':
+                        nodoNuevo, corr = cerraduraPositivaFNA(nodos, corr)
+                        nodos = [nodoNuevo]
+                        nodeCounter = 1
+
+                    if reArray[nodo] == '?':
+                        nodoNuevo, corr = cerraduraInterogationFNA(nodos, corr)
+                        nodos = [nodoNuevo]
+                        nodeCounter = 1
+
+                elif not isOperator(reArray[nodo]) and (nodeCounter < 2 and nodeCounter > 0)  and op != '|':
+                    nodoNuevo, corr = concatFNA(nodos, reArray[nodo], corr)
+                    nodos = [nodoNuevo]
+                    nodeCounter = 1
+                else:
+                    if not isOperator(reArray[nodo]) and (nodeCounter < 2 and nodeCounter > 0) and op == '|':
+                        nodoNuevo, corr = orFNA(nodos, reArray[nodo], corr)
+                        nodos = [nodoNuevo]
+                        nodeCounter = 1
+                        op = ''
+                    else:
+                        op = '|'
+            else:
+                nodos.append(reArray[nodo])
+                nodeCounter = nodeCounter + 1
+
+    return nodos[0], corr    

@@ -1,10 +1,11 @@
 import infixToPostfix as pos
-from postfixToNfa import *
-from funcs import *
-from Tree import *
+import postfixToNfa as nfa
+import RegexToDFA as dfa
+import NFAtoDFA as nfaDfa
 from Sim import *
-from operators import *
 from AugmentRegex import *
+import utils as diag
+import Sim as sim
 
 
 import sys
@@ -15,11 +16,11 @@ IMAGES_DIRECTORY = '/output/'
 inicio = 0
 fin = 0
 
-regex = input('Ingrese una expresion regular r: ')
+regex = input('Ingrese una reArray regular r: ')
 if regex == '':
     regex = 'ε'
 
-cadena = input('Ingrese una cadena w a ser validada: ')
+w = input('Ingrese una cadena w a ser validada: ')
 
 for caracter in regex:
     if caracter == '(':
@@ -37,16 +38,51 @@ else:
     postfix = pos.to_postfix(reg)
     print('Postfix: ', postfix)
 
-    tree = construir_arbol(postfix)
-    print_arbol(tree, 'output/arbol')
-    fna = construir_FNA_desde_arbol(tree)
-    print(fna)
-    g = generar_grafo_FNA(fna)
-    
-    
-    
-    #yesno = use_direct(regex, cadena)
-    augmented_regex = augment_regex(postfix)
-    #     (a.b*.a.b*).#
-    print(augmented_regex)
+    #prep
+    arbolFNA, isValid, error = regexFormat('(' + regex + ')')
+    arbolFDA, isValid, error = regexFormat('(' + regex + ')#')
 
+    tree = nfa.construir_arbol(postfix)
+    nfa.print_arbol(tree, 'output/arbol')
+   
+    #FNA 
+    fna = diag.core_NFA(arbolFNA)
+    diag.draw_fna(fna)
+    isRegexLanguage = sim.NFASim(fna, w)
+    if isRegexLanguage:
+        isAccepted = 'SI'
+    else:
+        isAccepted = 'NO'
+    print('FNA: La cadena '+w+' '+isAccepted+' es aceptada por el lenguaje de la expresion ' +reg)
+
+    #FDA Direct
+    DirectFDA = diag.core_DirectFDA(arbolFDA)
+    diag.draw_dfa(DirectFDA)
+    isRegexLanguage = sim.DFASim(DirectFDA, w)
+    if isRegexLanguage:
+        isAccepted = 'SI'
+    else:
+        isAccepted = 'NO'
+    print('DIRECT DFA: La cadena '+w+' '+isAccepted+' es aceptada por el lenguaje de la expresion ' +reg)
+
+
+    #DFA Subconjuntos
+    SubFDA = diag.core_SubFDA(fna)
+    diag.draw_dfaSub(SubFDA)
+    isRegexLanguage = sim.DFASim(SubFDA, w)
+    if isRegexLanguage:
+        isAccepted = 'SI'
+    else:
+        isAccepted = 'NO'
+    print('SUBCONJUNTOS DFA: La cadena '+w+' '+isAccepted+' es aceptada por el lenguaje de la expresion ' +reg)
+
+    
+    #DFA Minimizacion
+    minDFA = diag.core_minDFA(SubFDA)
+    diag.draw_dfaMin(minDFA)
+    isRegexLanguage = sim.DFASim(minDFA, w)
+    if isRegexLanguage:
+        isAccepted = 'SI'
+    else:
+        isAccepted = 'NO'
+    print('DFA MINIMIZADO: La cadena '+w+' '+isAccepted+' es aceptada por el lenguaje de la expresion ' +reg)

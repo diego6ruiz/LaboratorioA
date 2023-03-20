@@ -4,20 +4,14 @@ def insert_explicit_concat_operator(exp):
     for i in range(len(exp)):
         token = exp[i]
         output += token
-
         if token == '(' or token == '|':
             continue
-
         if i < len(exp) - 1:
             lookahead = exp[i + 1]
-
             if lookahead == '*' or lookahead == '?' or lookahead == '+' or lookahead == '|' or lookahead == ')':
                 continue
-
             output += '.'
-
     return output
-
 
 def peek(stack):
     return stack[-1] if len(stack) else None
@@ -31,7 +25,6 @@ operator_precedence = {
     '+': 2,
     '^': 3
 }
-
 
 def to_postfix(exp):
     output = ''

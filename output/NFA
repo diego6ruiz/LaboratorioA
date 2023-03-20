@@ -1,4 +1,4 @@
-digraph FNA {
+digraph NFA {
 	rankdir=LR size="8,5"
 	node [shape=doublecircle]
 	11
