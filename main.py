@@ -89,7 +89,7 @@ else:
 
 a"""
 
-scanner = Scanner('./yalex/4.yal')
+scanner = Scanner('./yalex/1.yal')
 scanner.scan()
 postfix = Postfix(scanner.finalReg).toPostfix()
 tree = Tree(postfix).build()
