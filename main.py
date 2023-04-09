@@ -1,4 +1,4 @@
-import infixToPostfix as pos
+from infixToPostfix import *
 import postfixToNfa as nfa
 import RegexToDFA as dfa
 import NFAtoDFA as nfaDfa
@@ -6,10 +6,12 @@ from Sim import *
 from AugmentRegex import *
 import utils as diag
 import Sim as sim
-
+from YaLexScan import *
+from Tree import *
 
 import sys
 
+"""
 ABC = [letter for letter in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ#0123456789\u03B5']
 IMAGES_DIRECTORY = '/output/'
 
@@ -64,8 +66,7 @@ else:
     else:
         isAccepted = 'NO'
     print('DIRECT DFA: La cadena '+w+' '+isAccepted+' es aceptada por el lenguaje de la expresion ' +reg)
-
-
+    
     #DFA Subconjuntos
     SubFDA = diag.core_SubFDA(fna)
     diag.draw_dfaSub(SubFDA)
@@ -76,7 +77,6 @@ else:
         isAccepted = 'NO'
     print('SUBCONJUNTOS DFA: La cadena '+w+' '+isAccepted+' es aceptada por el lenguaje de la expresion ' +reg)
 
-    
     #DFA Minimizacion
     minDFA = diag.core_minDFA(SubFDA)
     diag.draw_dfaMin(minDFA)
@@ -86,3 +86,10 @@ else:
     else:
         isAccepted = 'NO'
     print('DFA MINIMIZADO: La cadena '+w+' '+isAccepted+' es aceptada por el lenguaje de la expresion ' +reg)
+
+a"""
+
+scanner = Scanner('./yalex/4.yal')
+scanner.scan()
+postfix = Postfix(scanner.finalReg).toPostfix()
+tree = Tree(postfix).build()
