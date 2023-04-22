@@ -21,102 +21,128 @@ class Scanner:
         self.filename = filename
         self.variables = {}
         self.tokens = {}
-        self.rule_tokens = False
+        self.ruleTokens = False
         self.finalReg = ""
         self.alphabet = [chr(i) for i in range(256)]
         self.NumAlphabet = [str(i) for i in range(256)] #ASCII string
         self.operadores = ["|", "*", "+", "?", "(", ")", "•"]
         
     def scan(self):
+
+        word=""
+        ruleTokens = []
+        functions = []
+
         with open(self.filename, 'r') as f:
             lines = f.readlines()
 
-        for line in lines:  
-            #Obviar comentarios 
-            if "(*" in line and "*)" not in line:
-                    raise Exception("Falta cierre de comentario: " + line)
-            elif "*)" in line and "(*" not in line:
-                raise Exception("Falta apertura de comentario: " + line)
-            if not line.strip():
-                continue
+        activeRule = False
 
-            #Si encuentra un let, guardar la palabra siguiente como llave de diccionario y su valor
-            if 'let' in line:
-                key_value = line.split('=')
-                key = key_value[0].strip().split()[1]
-                value = key_value[1].strip()
+        for l in lines:
+            if activeRule:
+                if l == "|":
+                    if word.strip() != "":
+                        ruleTokens.append(word.strip())
+                        word = ""
+                else:
+                    word += l
+                    if "{" in word and "}" in word:
+                        word = word.strip()
+                        ruleTokens.append(word)
+                        word = ""
+                    elif "(*" in word and "*)" in word:
+                        word = ""
 
-                # Verificar si tiene brackets
-                if '[' in value and ']' not in value:
-                    raise Exception("Falta bracket de cierre: " + line)
-                elif ']' in value and '[' not in value:
-                    raise Exception("Falta bracket de apertura: " + line)
+            else:
+                word += l
 
-                self.variables[key] = value
-                continue
+                if "\n" in word:
+                    if word:
+                        if "let" in word:
+                            index = word.index("let") + len("let") 
+                            print(word[index])
+                            if word[index] == " ":
+                                functions.append(word[index:].strip())
+                            else:
+                                raise Exception("Error en la declaracion de variables " + word)
 
-            if 'rule tokens' in line:
-                self.rule_tokens = True
-                continue
-            if self.rule_tokens:
+                        elif "rule" in word:
+                            index = word.index("rule") + len("rule")
+                            if word[index] == " ":
+                                activeRule = True
+                            else:
+                                raise Exception("Error en la declaracion de reglas " + word)
 
-                #Verificar si tiene curly brackets
-                if '{' in value and '}' not in value:
-                    raise Exception("Falta curly bracket de cierre: " + line)
-                elif '}' in value and '{' not in value:
-                    raise Exception("Falta curly bracket de apertura: " + line)
-
+                        word = ""
+                        
+        for rule in ruleTokens:
+            if not rule == "|" :
                 temporary_word = ""
                 temporary_fun = ""
                 fun = False
-                in_comment = False
+            
+                for symbol in rule:
 
-                for i, x in enumerate(line):
-
-                    #Chequear si estamos en codigo comentado
-                    if x == "(" and i < len(line) - 1 and line[i+1] == "*":
-                        in_comment = True
-                    elif x == "*" and i < len(line) - 1 and line[i+1] == ")":
-                        in_comment = False
-                        continue
-                    if in_comment:
-                        continue
-
-                    if x != " "  and x != "\t" and x != "\n" and x != "'" and x != "|":
-                        if x == "{":
+                    if symbol != "'" and symbol != "|":
+                        if symbol == "{":
                             fun = True
-                        elif x == "}":
-                            temporary_fun += x
+                        elif symbol == "}":
+                            temporary_fun += symbol
                             break
                         
                         if fun:
-                            temporary_fun += x
+                            temporary_fun += symbol
                         else:
-                            temporary_word += x
+                            temporary_word += symbol
 
-                self.tokens[temporary_word] = temporary_fun
+                if "(*" in temporary_word and "*)" in temporary_word:
+                    start_index = temporary_word.index("(*")
+                    end_index = temporary_word.index("*)", start_index) + 2
+                    temporary_word = temporary_word[:start_index] + temporary_word[end_index:]
+                            
+                if "(*" in temporary_fun and "*)" in temporary_fun:
+                    start_index = temporary_fun.index("(*")
+                    end_index = temporary_fun.index("*)", start_index) + 2
+                    temporary_fun = temporary_fun[:start_index] + temporary_fun[end_index:]
 
-        #Convertir a reg con concatenacion
+                self.tokens[temporary_word.strip()] = temporary_fun.replace("{", "").replace("}","").strip()
+
+
+        for function in functions:
+            key_value = function.split('=')
+            key = key_value[0].strip()
+            value = key_value[1].strip()
+
+            self.variables[key] = value
+            
         self.convertRegex()
+
         self.addConcatenation()
 
         for key, value in self.variables.items():
             self.variables[key] = self.recursiveSerach(value) 
-       
         for key, value in self.tokens.items():
+            agregar = ""
+
             if key in self.variables.keys():
-                self.finalReg += self.variables[key] + "|"
+                agregar += self.variables[key]
             else:
                 simbol = ""
                 if len(key) > 1:
                     for i in key:
                         if i != "'" and i != '"' and i != " ":
                             simbol += str(Simbolo(i)) + "•"
-                    self.finalReg += simbol[:-1] + "|"
+                    agregar += simbol[:-1] 
 
                 else:
-                    self.finalReg += str(Simbolo(key)) + "|"
+                    agregar += str(Simbolo(key))
+
+            #agregar .#funcion
+            self.finalReg += agregar + '•"#' + key.replace('"',"") + '"|'
+
         self.finalReg = self.finalReg[:-1]
+
+
 
     def convertRegex(self):
         for key, value in self.variables.items():

@@ -25,8 +25,9 @@ def to_postfix(exp):
     return output
 
 class Postfix:
-    def __init__(self, expression):
-        self.expression = expression
+    def __init__(self, scanner):
+        self.expression = scanner.finalReg
+        self.tokens = scanner.tokens.keys()
         self.alphabet = [str(i) for i in range(256)]
         self.operators = ['|', '*', '+', '?', '(', ')', '•']
         self.precedence = {'(': 1, "(": 1, '|': 2, '•': 3, '*': 4, '+': 4, '?': 4}
@@ -133,20 +134,42 @@ class Postfix:
         expresiones = []
         temp = ""
 
+        token = False
+        tokenString = ""
+
         for i in range(len(self.expression)):
-            #Operador
             current = self.expression[i]
-            if current == "+" or current == "*" or current == "?" or current == "•" or current == "|" or current == "(" or current == ")":
-                if(temp != ""):
-                    expresiones.append(temp)
-                    temp = ""
-                expresiones.append(current)
-            #Caracter
+
+
+            if current =='"':
+                if tokenString != "":
+                    expresiones.append(tokenString.replace('"', ''))
+                    tokenString = ""
+                    token = False
+                    continue
+                else:
+                    token = True
+
+            if token:
+                tokenString += current
+
             else:
-                temp += current
+                #Operador
+                if current == "+" or current == "*" or current == "?" or current == "•" or current == "|" or current == "(" or current == ")":
+                    if(temp != ""):
+                        expresiones.append(temp)
+                        temp = ""
+                    expresiones.append(current)
+
+                #Caracter
+                else: 
+                    temp += current
+
         if(temp != ""):
-            expresiones.append(temp)
+            expresiones.append(tokenString)
         return expresiones
+
+
 
 def insert_explicit_concat_operator(exp):
     output = ''

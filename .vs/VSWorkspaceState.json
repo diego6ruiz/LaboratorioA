@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\output"
+    "\\output",
+    "\\yalex"
   ],
+  "SelectedNode": "\\yalex\\3.yal",
   "PreviewInSolutionExplorer": false
 }
