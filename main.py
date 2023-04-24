@@ -8,6 +8,7 @@ import utils as diag
 import Sim as sim
 from YaLexScan import *
 from Tree import *
+from Direct import *
 
 import sys
 
@@ -89,10 +90,42 @@ else:
 
 a"""
 
-scanner = Scanner('./yalex/3.yal')
-scanner = scanner.scan()
+scanner = Scanner('./yalex/4.yal')
+scanner.scan()
 
-postfix = Postfix(scanner)
-postfix = postfix.toPostfix()
-
+postfix = Postfix(scanner).toPostfix()
 tree = Tree(postfix).build()
+
+direct = Direct()
+direct = direct.Direct(postfix) 
+
+
+test = "./tokens/test.txt"
+with open(test, "r") as archivo:
+    contenido = archivo.read()
+
+print("\n==================================SIMULACION==================================")   
+#crear archivo token.py
+with open('./tokens/tokens.py', 'w') as f:
+    f.write('def tokens(listaTokens):\n')
+    f.write('\tfor tokenValue in listaTokens: \n')
+    f.write('\t\ttoken = tokenValue[1].replace("#","") \n')
+
+    for i, (key, value) in enumerate(scanner.tokens.items()):
+        if i == 0:
+            f.write('\t\tif token == ' + repr(key) + ':\n')
+        else:
+            f.write('\t\telif token == ' + repr(key) + ':\n')
+            
+        if value == '':
+            f.write('\t\t\treturn None\n')
+        else:
+            f.write('\t\t\t' + value + '\n')
+            
+        f.write('\t\telse: \n\t\t\tprint(' + '"Error sintactico"' + ')')
+
+#crear simulacion
+simulation = Simulation(direct, contenido)
+
+#mandar simulacion a token.py
+print(tokens(simulation.result))

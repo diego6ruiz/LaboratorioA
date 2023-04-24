@@ -26,51 +26,64 @@ def to_postfix(exp):
 
 class Postfix:
     def __init__(self, scanner):
-        self.expression = scanner.finalReg
+        self.expression = scanner.regFinal
         self.tokens = scanner.tokens.keys()
-        self.alphabet = [str(i) for i in range(256)]
-        self.operators = ['|', '*', '+', '?', '(', ')', '•']
+        self.alphabet = [str(i) for i in range(256)] # ASCII
+        self.operators = operators = ['|', '*', '+', '?', '(', ')', '•']
         self.precedence = {'(': 1, "(": 1, '|': 2, '•': 3, '*': 4, '+': 4, '?': 4}
         self.expression = self.FormatExpression()
 
+    def TokenAlphabet(self, alphabet, tokens):
+        alphabet = alphabet
+        for token in tokens:
+            alphabet.append("#" + token)
+
+        return alphabet
 
     def FormatExpression(self):
-        formattedExp = self.findExpression()
-        formattedExp = self.addConcat(formattedExp)
-        return formattedExp
+        new_expression = self.findExpression()
+        # new_expression = self.CheckEpislon(new_expression)
+        new_expression = self.AddConcatenation(new_expression)
+        return new_expression
     
     def CheckEpislon(self, expression):
         for token in enumerate(expression):
             if token == 'e' or token == 'ϵ':
                 expression.replace(token, 'ε')
+
         return expression
 
-    def addConcat(self, expression):
-        concatExp = []
+    def AddConcatenation(self, expression):
+        newExpr = []
         for i, token in enumerate(expression):
             if i > 0:
                 if token in self.alphabet and expression[i-1] in self.alphabet:
-                    concatExp.append("•")
+                    newExpr.append("•")
                 elif token in self.alphabet and expression[i-1] == ')':
-                    concatExp.append("•")
+                    newExpr.append("•")
                 elif token == '(' and expression[i-1] in self.alphabet:
-                    concatExp.append("•")
+                    newExpr.append("•")
                 elif token == '(' and expression[i-1] == ')':
-                    concatExp.append("•")
+                    newExpr.append("•")
                 elif expression[i-1] == '?' and (token in self.alphabet or token == '('):
-                    concatExp.append("•")
+                    newExpr.append("•")
                 elif expression[i-1] == '*' and (token in self.alphabet or token == '('):
-                    concatExp.append("•")
+                    newExpr.append("•")
                 elif expression[i-1] == '+' and (token in self.alphabet or token == '('):
-                    concatExp.append("•")
-            concatExp.append(token)
+                    newExpr.append("•")
+            newExpr.append(token)
            
-        return concatExp
+        print(newExpr)
+        return newExpr
 
     def ValidateExpression(self):
+
         for token in self.expression:
             if token not in self.alphabet and token not in self.operators:
-                raise ValueError("Caracter invalido: " + token)
+                if token.startswith('#'):
+                    continue
+                else:
+                    raise ValueError("Caracter invalido: " + token)
 
         if self.expression.count('(') != self.expression.count(')'):
             raise ValueError("Parentesis sin cerrar")
@@ -92,9 +105,9 @@ class Postfix:
 
         for i, token in enumerate(self.expression):
             if token in "•|":
-                if self.expression[i-1] not in self.alphabet and self.expression[i-1] != ')' and self.expression[i-1] not in "+*?":
+                if self.expression[i-1] not in self.alphabet and not self.expression[i-1].startswith('#') and self.expression[i-1] != ')' and self.expression[i-1] not in "+*?":
                     raise ValueError("Operador binario debe tener un caracter o ) a la izquierda")
-                if self.expression[i+1] not in self.alphabet and self.expression[i+1] != '(' and self.expression[i+1] not in "+*?":
+                if self.expression[i+1] not in self.alphabet and not self.expression[i+1].startswith('#') and self.expression[i+1] != '(' and self.expression[i+1] not in "+*?":
                     raise ValueError("Operador binario debe tener un caracter o ( a la derecha")
 
         for i, token in enumerate(self.expression):
@@ -103,16 +116,19 @@ class Postfix:
                     raise ValueError("Operador unario no puede estar al principio")
 
     def toPostfix(self):
+
         try:
             self.ValidateExpression()
+
         except ValueError as e:
             print(e)
             return None
 
         stack = []
         postfix = []
+
         for token in self.expression:
-            if token in self.alphabet:
+            if token in self.alphabet or token.startswith('#'):
                 postfix.append(token) 
             elif token == '(':
                 stack.append(token)
@@ -132,16 +148,17 @@ class Postfix:
 
     def findExpression(self):
         expresiones = []
-        temp = ""
+        tmp = ""
 
         token = False
         tokenString = ""
 
         for i in range(len(self.expression)):
+            
             current = self.expression[i]
 
-
-            if current =='"':
+            #si es # 
+            if current == '"':
                 if tokenString != "":
                     expresiones.append(tokenString.replace('"', ''))
                     tokenString = ""
@@ -154,19 +171,21 @@ class Postfix:
                 tokenString += current
 
             else:
-                #Operador
+            #si es un operador
+
                 if current == "+" or current == "*" or current == "?" or current == "•" or current == "|" or current == "(" or current == ")":
-                    if(temp != ""):
-                        expresiones.append(temp)
-                        temp = ""
+                    if(tmp != ""):
+                        expresiones.append(tmp)
+                        tmp = ""
                     expresiones.append(current)
 
-                #Caracter
-                else: 
-                    temp += current
+                #si es un caracter
+                else:
+                    tmp += current
 
-        if(temp != ""):
+        if(tokenString != ""):
             expresiones.append(tokenString)
+
         return expresiones
 
 

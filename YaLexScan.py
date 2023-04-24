@@ -22,39 +22,38 @@ class Scanner:
         self.variables = {}
         self.tokens = {}
         self.ruleTokens = False
-        self.finalReg = ""
-        self.alphabet = [chr(i) for i in range(256)]
-        self.NumAlphabet = [str(i) for i in range(256)] #ASCII string
-        self.operadores = ["|", "*", "+", "?", "(", ")", "•"]
+        self.regFinal = ""
+        self.alphabet = [chr(i) for i in range(256)] # ASCII
+        self.NumAlphabet = [str(i) for i in range(256)] # ASCII pero en string
+        self.operators = ["|", "*", "+", "?", "(", ")", "•"]
         
     def scan(self):
 
-        word=""
+        word = ""
         ruleTokens = []
         functions = []
 
         with open(self.filename, 'r') as f:
-            lines = f.readlines()
+            contenido = f.read()
 
         activeRule = False
 
-        for l in lines:
+        for symbol in contenido:
             if activeRule:
-                if l == "|":
+                if symbol == "|":
                     if word.strip() != "":
                         ruleTokens.append(word.strip())
                         word = ""
                 else:
-                    word += l
+                    word += symbol
                     if "{" in word and "}" in word:
                         word = word.strip()
                         ruleTokens.append(word)
                         word = ""
                     elif "(*" in word and "*)" in word:
                         word = ""
-
             else:
-                word += l
+                word += symbol
 
                 if "\n" in word:
                     if word:
@@ -74,9 +73,11 @@ class Scanner:
                                 raise Exception("Error en la declaracion de reglas " + word)
 
                         word = ""
-                        
+
         for rule in ruleTokens:
+
             if not rule == "|" :
+
                 temporary_word = ""
                 temporary_fun = ""
                 fun = False
@@ -95,6 +96,7 @@ class Scanner:
                         else:
                             temporary_word += symbol
 
+                #limpiar comentarios
                 if "(*" in temporary_word and "*)" in temporary_word:
                     start_index = temporary_word.index("(*")
                     end_index = temporary_word.index("*)", start_index) + 2
@@ -105,8 +107,8 @@ class Scanner:
                     end_index = temporary_fun.index("*)", start_index) + 2
                     temporary_fun = temporary_fun[:start_index] + temporary_fun[end_index:]
 
-                self.tokens[temporary_word.strip()] = temporary_fun.replace("{", "").replace("}","").strip()
 
+                self.tokens[temporary_word.strip()] = temporary_fun.replace("{", "").replace("}","").strip()
 
         for function in functions:
             key_value = function.split('=')
@@ -114,14 +116,20 @@ class Scanner:
             value = key_value[1].strip()
 
             self.variables[key] = value
-            
-        self.convertRegex()
 
+        #convertir a regex las expresiones entre []
+        self.convertRegex()
+        
+        #agregar concatenaciones necesarias
         self.addConcatenation()
 
+        # reemplazo recursivo de variables
         for key, value in self.variables.items():
             self.variables[key] = self.recursiveSerach(value) 
+      
+        #armar la expresion final 
         for key, value in self.tokens.items():
+
             agregar = ""
 
             if key in self.variables.keys():
@@ -138,15 +146,16 @@ class Scanner:
                     agregar += str(Simbolo(key))
 
             #agregar .#funcion
-            self.finalReg += agregar + '•"#' + key.replace('"',"") + '"|'
+            self.regFinal += agregar + '•"#' + key.replace('"',"") + '"|'
 
-        self.finalReg = self.finalReg[:-1]
+        self.regFinal = self.regFinal[:-1]
 
 
-
+    #reemplazo de [] con el regex correspondiente==============================================
     def convertRegex(self):
         for key, value in self.variables.items():
             if "[" in value:
+                #obtener el valor dentro de los corchetes
                 first = value.find('[')
                 last = value.find(']')
                 inside = value[first+1:last]
@@ -155,43 +164,51 @@ class Scanner:
 
                 if inside.startswith ('"') and inside.endswith ('"'):
                     
+                    #obtner lo que esta antes de las comillas
                     first1 = inside.find('"')
                     last1 = inside.rfind('"')
                     inside1 = inside[first1+1:last1]
 
-                    temp = ""
+                    tmp = ""
                     tempFinal = ""
                     contador = 0
                     while contador < len(inside1):
-                        temp += inside1[contador]
+                        tmp += inside1[contador]
 
-                        if temp =="\\":
+                        if tmp =="\\":
+                            #si el siguiente caracter es s
                             if inside1[contador+1] == "s":
                                 tempFinal += str(ord(" ")) + "|"
-                                temp = ""
+                                tmp = ""
                                 contador += 2
 
+                            #si el siguiente caracter es t
                             elif inside1[contador+1] == "t":
                                 tempFinal += str(ord("\t")) + "|"
-                                temp = ""
+                                tmp = ""
                                 contador += 2
 
+                            #si el siguiente caracter es n
                             elif inside1[contador+1] == "n":
                                 tempFinal += str(ord("\n")) + "|"
-                                temp = ""
+                                tmp = ""
                                 contador += 2
 
                         else:
 
-                            if temp in self.alphabet:
+                            if tmp in self.alphabet:
                                 continue
                             else:
-                                tempFinal += str(ord(temp[:-1])) + "|"
-                                temp = ""
+                                tempFinal += str(ord(tmp[:-1])) + "|"
+                                tmp = ""
                                 contador += 1
+
+                    
                     self.variables[key] = before + tempFinal[:-1] + after
                     
                 else:
+
+                    #convertir todos los '' en numeros 
                     open = False
                     enComillas = ""
                     tempFinal = []
@@ -232,28 +249,42 @@ class Scanner:
                         self.variables[key] = before +  "|".join(tempFinal) +after
 
 
+    # busqueda recursiva de variables ==========================================================
     def recursiveSerach(self, value):
+
         if(value.startswith('[')) and (value.endswith(']')):
             return value.replace('[','(').replace(']',')')
+        
         if value in self.variables.keys():
             return self.variables[value]
-        if value in self.operadores:
+        
+        if value in self.operators:
             return value
+        
         if value in self.alphabet:
             return str(ord(value))
+        
         if value in self.NumAlphabet:
             return value
+        
         else:
-            if '(' in value:
+
+            if '(' in value:    
+
+                #encontrar el primer parentesis
                 first = value.find('(')
+                #encontrar el siguiente parentesis
                 last = value.find(')')
 
+                #obtener el valor dentro de los parentesis
                 inside = value[first+1:last]
                 inside = self.recursiveSerach(inside)
 
+                #obtner lo que esta antes de los parentesis
                 before = value[:first]
                 before = self.recursiveSerach(before)
 
+                #obtener lo que esta despues de los parentesis
                 after = value[last+1:]
                 after = self.recursiveSerach(after)
                 
@@ -261,14 +292,19 @@ class Scanner:
             
             if '[' in value:    
 
+                #encontrar el primer parentesis
                 first = value.find('[')
+                #encontrar el siguiente parentesis
                 last = value.find(']')
 
+                #obtener el valor dentro de los parentesis
                 inside = value[first+1:last]
 
+                #obtner lo que esta antes de los parentesis
                 before = value[:first]
                 before = self.recursiveSerach(before)
 
+                #obtener lo que esta despues de los parentesis
                 after = value[last+1:]
                 after = self.recursiveSerach(after)
                 
@@ -315,47 +351,58 @@ class Scanner:
                 elif "'" in value:
                     return (self.recursiveSerach(value.replace("'", "")))
                 
+                elif " " in value:
+                    return (self.recursiveSerach(value.replace(" ", "")))
+                
                 else:
                     raise Exception("Variable not found: " + value + "")
                 
+
+
+    # agregar concatenacion =====================================================================
     def addConcatenation(self):
         for key, value in self.variables.items():
+            # value = value.replace("'", "")
+            
             if not value.startswith('['):
+
                 expresiones = []
-                temp = ""
+                tmp = ""
                 for i, x in enumerate(value):
                     if x == "+" or x == "*" or x == "?"  or x == "|" or x == "(" or x == ")" or x == "." or x == "[" or x == "]" :
-                        if(temp != ""):
-                            expresiones.append(temp)
-                            temp = ""
+                        if(tmp != ""):
+                            expresiones.append(tmp)
+                            tmp = ""
                         expresiones.append(x)
+
                     else:
-                        temp += x
+                        tmp += x
 
-                if(temp != ""):
-                    expresiones.append(temp)
+                if(tmp != ""):
+                    expresiones.append(tmp)
 
-                new_expr = []
+                newExpr = []
                 for i, token in enumerate(expresiones):
                     if i > 0:
                         if token in self.variables.keys() and expresiones[i-1] in self.variables.keys():
-                            new_expr.append("•")
+                            newExpr.append("•")
                         elif token in self.variables.keys() and expresiones[i-1] == ')':
-                            new_expr.append("•")
+                            newExpr.append("•")
                         elif token == '(' and expresiones[i-1] in self.variables.keys():
-                            new_expr.append("•")
+                            newExpr.append("•")
                         elif token == '(' and expresiones[i-1] == ')':
-                            new_expr.append("•")
+                            newExpr.append("•")
                         elif expresiones[i-1] == '?' and (token in self.variables.keys() or token == '(' or token == '['):
-                            new_expr.append("•")
+                            newExpr.append("•")
                         elif expresiones[i-1] == '*' and (token in self.variables.keys() or token == '(' or token == '['):
-                            new_expr.append("•")
+                            newExpr.append("•")
                         elif expresiones[i-1] == '+' and (token in self.variables.keys() or token == '(' or token == '['):
-                            new_expr.append("•")
+                            newExpr.append("•")
                         elif token == "[" and (expresiones[i-1].replace("'","") in self.alphabet):
-                            new_expr.append("•")
-                        elif token in self.variables.keys() and expresiones[i-1] in self.alphabet and expresiones[i-1] not in self.operadores:
-                            new_expr.append("•")
+                            newExpr.append("•")
+                        elif token in self.variables.keys() and expresiones[i-1] in self.alphabet and expresiones[i-1] not in self.operators:
+                            newExpr.append("•")
                         
-                    new_expr.append(token)
-                self.variables[key] = ''.join(new_expr)
+                    newExpr.append(token)
+
+                self.variables[key] = ''.join(newExpr)

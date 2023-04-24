@@ -43,6 +43,9 @@ class Set:
     
     def pop(self):
         return self.elements.pop()
+
+    def Contains(self, elemento):
+        return elemento in self.elements
     
     def rmDupe(self):
         self.elements = list(set(self.elements))
@@ -53,17 +56,21 @@ class Set:
     def __str__(self):
         return str(self.elements)
 
+
 class Node:
-    def __init__(self, symbol, leftLeaf=None, rightLeaf=None):
+    def __init__(self, symbol, leftLeaf=None, rightLeaf=None, number=None):
         self.symbol = symbol
         self.leftLeaf = leftLeaf
         self.rightLeaf = rightLeaf
+        self.number = number
         self.nullable = False
-        self.first_position = Set()
-        self.last_position = Set()
-        self.next_position = Set()
+        self.first_position  = Set()
+        self.last_position  = Set()
+        self.next_position  = Set()
+
     def __str__(self):
         return self.symbol
+    
     def is_leaf(self):
         return self.leftLeaf is None and self.rightLeaf is None
 
@@ -77,22 +84,22 @@ class Tree:
     def build(self, filename="arbol"):
         for symbol in self.expression:
             if symbol == '*':
-                self.newNode(symbol)
+                self.create_node(symbol)
             elif symbol == '+':
-                self.newNode(symbol)
+                self.create_node(symbol)
             elif symbol == '?':
-                self.newNode(symbol)
+                self.create_node(symbol)
             elif symbol == '.':
-                self.newNode(symbol)
+                self.create_node(symbol)
             elif symbol == '|':
-                self.newNode(symbol)
+                self.create_node(symbol)
             else:
-                self.newNode(symbol)
+                self.create_node(symbol)
 
         self.node = self.stack.pop()
         self.toGraph(self.node, filename)
 
-    def newNode(self, symbol):
+    def create_node(self, symbol):
 
         if symbol == '*':
             node = Node(symbol)
@@ -126,11 +133,11 @@ class Tree:
             node.leftLeaf = self.stack.pop()
             self.stack.append(node)
         else:
-            node = Node(chr(int(symbol)))
+            node = Node(symbol)
             self.stack.append(node)
 
-    def toGraph(self, node, filename="output/arbol"):
-        dot = Digraph(comment='Super Tree')
+    def toGraph(self, node, filename="arbol"):
+        dot = Digraph(comment='Tree')
         self.GraphNode(node, dot)
         dot.render(filename, view=True)
 
