@@ -109,7 +109,7 @@ class Simulation:
                         if self.stateAlreadyExists(transition[1], next_states) is None:
                             next_states.addElement(transition[1])
                     
-            if next_states.IsEmpty():
+            if next_states.isEmpty():
                 if self.cadena == "":
                     self.result.append((self.input[i], "Error Lexico"))
                     # print(self.input[i], "Error Lexico")

@@ -9,6 +9,7 @@ import Sim as sim
 from YaLexScan import *
 from Tree import *
 from Direct import *
+from tokens.Tokens import tokens
 
 import sys
 
@@ -104,9 +105,9 @@ test = "./tokens/test.txt"
 with open(test, "r") as archivo:
     contenido = archivo.read()
 
-print("\n==================================SIMULACION==================================")   
+print("\nSimulacion de Tokens")   
 #crear archivo token.py
-with open('./tokens/tokens.py', 'w') as f:
+with open('./tokens/Tokens.py', 'w') as f:
     f.write('def tokens(listaTokens):\n')
     f.write('\tfor tokenValue in listaTokens: \n')
     f.write('\t\ttoken = tokenValue[1].replace("#","") \n')
@@ -122,7 +123,7 @@ with open('./tokens/tokens.py', 'w') as f:
         else:
             f.write('\t\t\t' + value + '\n')
             
-        f.write('\t\telse: \n\t\t\tprint(' + '"Error sintactico"' + ')')
+    f.write('\t\telse: \n\t\t\tprint(' + '"Error sintactico"' + ')')
 
 #crear simulacion
 simulation = Simulation(direct, contenido)

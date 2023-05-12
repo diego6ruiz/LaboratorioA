@@ -3,41 +3,29 @@ def tokens(listaTokens):
 		token = tokenValue[1].replace("#","") 
 		if token == 'ws':
 			return None
-		else: 
-			print("Error sintactico")		elif token == 'id':
+		elif token == 'id':
 			return ID
-		else: 
-			print("Error sintactico")		elif token == 'number':
+		elif token == 'number':
 			return NUMBER
-		else: 
-			print("Error sintactico")		elif token == ';':
+		elif token == ';':
 			return SEMICOLON
-		else: 
-			print("Error sintactico")		elif token == ':=':
+		elif token == ':=':
 			return ASSIGNOP
-		else: 
-			print("Error sintactico")		elif token == '<':
+		elif token == '<':
 			return LT
-		else: 
-			print("Error sintactico")		elif token == '=':
+		elif token == '=':
 			return EQ
-		else: 
-			print("Error sintactico")		elif token == '+':
+		elif token == '+':
 			return PLUS
-		else: 
-			print("Error sintactico")		elif token == '-':
+		elif token == '-':
 			return MINUS
-		else: 
-			print("Error sintactico")		elif token == '*':
+		elif token == '*':
 			return TIMES
-		else: 
-			print("Error sintactico")		elif token == '/':
+		elif token == '/':
 			return DIV
-		else: 
-			print("Error sintactico")		elif token == '(':
+		elif token == '(':
 			return LPAREN
-		else: 
-			print("Error sintactico")		elif token == ')':
+		elif token == ')':
 			return RPAREN
 		else: 
 			print("Error sintactico")
