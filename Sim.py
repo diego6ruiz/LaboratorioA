@@ -112,7 +112,6 @@ class Simulation:
             if next_states.isEmpty():
                 if self.cadena == "":
                     self.result.append((self.input[i], "Error Lexico"))
-                    # print(self.input[i], "Error Lexico")
 
                     self.position = i + 1
                     self.cadena = ""
@@ -130,8 +129,6 @@ class Simulation:
                     self.result.append((self.cadena, None))
                 else:
                     self.result.append((self.cadena, state.token))
-                # print(self.cadena, state.token)
-
                 self.position = i
                 self.cadena = ""
                 self.directSimulation()

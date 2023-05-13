@@ -16,15 +16,15 @@ class Simbolo:
         else:
             return ord(c_id)
 
-class Scanner:
+class ScannerYalex:
     def __init__(self, filename):
         self.filename = filename
         self.variables = {}
         self.tokens = {}
         self.ruleTokens = False
         self.regFinal = ""
-        self.alphabet = [chr(i) for i in range(256)] # ASCII
-        self.NumAlphabet = [str(i) for i in range(256)] # ASCII pero en string
+        self.alphabet = [chr(i) for i in range(256)] 
+        self.NumAlphabet = [str(i) for i in range(256)] 
         self.operators = ["|", "*", "+", "?", "(", ")", "•"]
         
     def scan(self):
@@ -63,14 +63,14 @@ class Scanner:
                             if word[index] == " ":
                                 functions.append(word[index:].strip())
                             else:
-                                raise Exception("Error en la declaracion de variables " + word)
+                                raise Exception("Error en declaracion de variables " + word)
 
                         elif "rule" in word:
                             index = word.index("rule") + len("rule")
                             if word[index] == " ":
                                 activeRule = True
                             else:
-                                raise Exception("Error en la declaracion de reglas " + word)
+                                raise Exception("Error en declaracion de reglas " + word)
 
                         word = ""
 
@@ -96,7 +96,6 @@ class Scanner:
                         else:
                             temporary_word += symbol
 
-                #limpiar comentarios
                 if "(*" in temporary_word and "*)" in temporary_word:
                     start_index = temporary_word.index("(*")
                     end_index = temporary_word.index("*)", start_index) + 2
@@ -117,21 +116,14 @@ class Scanner:
 
             self.variables[key] = value
 
-        #convertir a regex las expresiones entre []
         self.convertRegex()
-        
-        #agregar concatenaciones necesarias
         self.addConcatenation()
 
-        # reemplazo recursivo de variables
         for key, value in self.variables.items():
             self.variables[key] = self.recursiveSerach(value) 
       
-        #armar la expresion final 
         for key, value in self.tokens.items():
-
             agregar = ""
-
             if key in self.variables.keys():
                 agregar += self.variables[key]
             else:
@@ -140,22 +132,16 @@ class Scanner:
                     for i in key:
                         if i != "'" and i != '"' and i != " ":
                             simbol += str(Simbolo(i)) + "•"
-                    agregar += simbol[:-1] 
-
+                    agregar += simbol[:-1]
                 else:
                     agregar += str(Simbolo(key))
-
-            #agregar .#funcion
             self.regFinal += agregar + '•"#' + key.replace('"',"") + '"|'
 
         self.regFinal = self.regFinal[:-1]
 
-
-    #reemplazo de [] con el regex correspondiente==============================================
     def convertRegex(self):
         for key, value in self.variables.items():
             if "[" in value:
-                #obtener el valor dentro de los corchetes
                 first = value.find('[')
                 last = value.find(']')
                 inside = value[first+1:last]
@@ -163,8 +149,6 @@ class Scanner:
                 after = value[last:]
 
                 if inside.startswith ('"') and inside.endswith ('"'):
-                    
-                    #obtner lo que esta antes de las comillas
                     first1 = inside.find('"')
                     last1 = inside.rfind('"')
                     inside1 = inside[first1+1:last1]
@@ -176,39 +160,34 @@ class Scanner:
                         tmp += inside1[contador]
 
                         if tmp =="\\":
-                            #si el siguiente caracter es s
+                            #caracter s
                             if inside1[contador+1] == "s":
                                 tempFinal += str(ord(" ")) + "|"
                                 tmp = ""
                                 contador += 2
 
-                            #si el siguiente caracter es t
+                            #caracter t
                             elif inside1[contador+1] == "t":
                                 tempFinal += str(ord("\t")) + "|"
                                 tmp = ""
                                 contador += 2
 
-                            #si el siguiente caracter es n
+                            #caracter n
                             elif inside1[contador+1] == "n":
                                 tempFinal += str(ord("\n")) + "|"
                                 tmp = ""
                                 contador += 2
 
                         else:
-
                             if tmp in self.alphabet:
                                 continue
                             else:
                                 tempFinal += str(ord(tmp[:-1])) + "|"
                                 tmp = ""
                                 contador += 1
-
-                    
                     self.variables[key] = before + tempFinal[:-1] + after
                     
                 else:
-
-                    #convertir todos los '' en numeros 
                     open = False
                     enComillas = ""
                     tempFinal = []
@@ -249,9 +228,7 @@ class Scanner:
                         self.variables[key] = before +  "|".join(tempFinal) +after
 
 
-    # busqueda recursiva de variables ==========================================================
     def recursiveSerach(self, value):
-
         if(value.startswith('[')) and (value.endswith(']')):
             return value.replace('[','(').replace(']',')')
         
@@ -268,23 +245,17 @@ class Scanner:
             return value
         
         else:
-
             if '(' in value:    
 
-                #encontrar el primer parentesis
                 first = value.find('(')
-                #encontrar el siguiente parentesis
                 last = value.find(')')
 
-                #obtener el valor dentro de los parentesis
                 inside = value[first+1:last]
                 inside = self.recursiveSerach(inside)
 
-                #obtner lo que esta antes de los parentesis
                 before = value[:first]
                 before = self.recursiveSerach(before)
 
-                #obtener lo que esta despues de los parentesis
                 after = value[last+1:]
                 after = self.recursiveSerach(after)
                 
@@ -292,19 +263,14 @@ class Scanner:
             
             if '[' in value:    
 
-                #encontrar el primer parentesis
                 first = value.find('[')
-                #encontrar el siguiente parentesis
                 last = value.find(']')
 
-                #obtener el valor dentro de los parentesis
                 inside = value[first+1:last]
 
-                #obtner lo que esta antes de los parentesis
                 before = value[:first]
                 before = self.recursiveSerach(before)
 
-                #obtener lo que esta despues de los parentesis
                 after = value[last+1:]
                 after = self.recursiveSerach(after)
                 
@@ -357,9 +323,6 @@ class Scanner:
                 else:
                     raise Exception("Variable not found: " + value + "")
                 
-
-
-    # agregar concatenacion =====================================================================
     def addConcatenation(self):
         for key, value in self.variables.items():
             # value = value.replace("'", "")

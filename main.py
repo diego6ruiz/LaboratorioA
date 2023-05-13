@@ -10,7 +10,8 @@ from YaLexScan import *
 from Tree import *
 from Direct import *
 from tokens.Tokens import tokens
-
+from YaParScan import *
+from SLR import SLR
 import sys
 
 """
@@ -91,6 +92,8 @@ else:
 
 a"""
 
+
+"""
 scanner = Scanner('./yalex/4.yal')
 scanner.scan()
 
@@ -99,7 +102,6 @@ tree = Tree(postfix).build()
 
 direct = Direct()
 direct = direct.Direct(postfix) 
-
 
 test = "./tokens/test.txt"
 with open(test, "r") as archivo:
@@ -121,7 +123,7 @@ with open('./tokens/Tokens.py', 'w') as f:
         if value == '':
             f.write('\t\t\treturn None\n')
         else:
-            f.write('\t\t\t' + value + '\n')
+            f.write('\t\t\t' + value + '\n') 
             
     f.write('\t\telse: \n\t\t\tprint(' + '"Error sintactico"' + ')')
 
@@ -130,3 +132,22 @@ simulation = Simulation(direct, contenido)
 
 #mandar simulacion a token.py
 print(tokens(simulation.result))
+a"""
+
+scannerYal = ScannerYalex('./yalex/slr-2.yal')
+scannerYal.scan()
+
+scanner = ScannerYapar('./yapar/slr-2.yalp')
+tokens, production = scanner.scan(scannerYal.tokens)
+print("TOKENS")
+print(tokens)
+print("PRODUCTIONS")
+print(production)
+print()
+
+print("FUNCIONES PRIMERO Y SIGUIENTE")
+lr0 = SLR(tokens,production)
+lr0.SLR()
+
+
+

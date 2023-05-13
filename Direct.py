@@ -8,7 +8,7 @@ class Automaton:
         self.finalStates = Set()
         self.symbols = Set()
         self.initialState = None
-        self.transitions = []
+        self.transitions  = []
         self.tokens = []
 
     def addState(self, estado):
@@ -24,17 +24,23 @@ class Automaton:
         self.transitions.append((origen, destino, simbolo))
 
     def setSingleFinalState(self, estado):
-        self.finalStates.Clear()
+        self.finalStates.clr()
         self.finalStates.addElement(estado)
 
     def toString(self):
-        #for estado in self.states.elements:
-            #print(estado)
-        #for transition in self.transitions:
-            #print(transition[0], " -> ", transition[1], " -> ", transition[2])
-        #print(self.initialState)
-        #for estado_final in self.finalStates.elements:
-            #print(estado_final)
+        """
+        print("\States")
+        for estado in self.states.elements:
+            print(estado)
+        print("\nTransitions")
+        for transition in self.transitions:
+            print(transition[0], " -> ", transition[1], " -> ", transition[2])
+        print("\Initial State")
+        print(self.initialState)
+        print("\nFinal States")
+        for estado_final in self.finalStates.elements:
+            print(estado_final)
+        a"""
         print()
            
     def toGraph(self,automaton, name):
@@ -43,19 +49,19 @@ class Automaton:
 
         for state in automaton.states.elements:
             if state.type == 'inicial':
-                g.node(str(state.id), shape='circle')
+                g.node(str(state.id), shape='square')
                 g.node ('', shape='none', height='0', width='0')
                 g.edge('', str(state.id))
 
             elif state.type == 'final_inicial':
-                g.node(str(state.id), shape='doublecircle')
+                g.node(str(state.id), shape='square')
                 g.node ('', shape='none', height='0', width='0')
                 g.edge('', str(state.id))
 
             elif state.type == 'final':
-                g.node(str(state.id), shape='doublecircle')
+                g.node(str(state.id), shape='square')
             else:
-                g.node(str(state.id), shape='circle')
+                g.node(str(state.id), shape='square')
                 
 
         for transition in automaton.transitions:
@@ -125,7 +131,6 @@ class Direct():
 
         counter = 0
 
-        # initstate  es first_position del nodo raiz
         final = False
         for element in node.first_position.elements:
             if "#" in element.symbol:
