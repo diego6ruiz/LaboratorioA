@@ -134,6 +134,8 @@ simulation = Simulation(direct, contenido)
 print(tokens(simulation.result))
 a"""
 
+
+"""
 scannerYal = ScannerYalex('./yalex/slr-2.yal')
 scannerYal.scan()
 
@@ -148,6 +150,29 @@ print()
 print("FUNCIONES PRIMERO Y SIGUIENTE")
 lr0 = SLR(tokens,production)
 lr0.SLR()
+"""
 
 
+scannerYal = ScannerYalex('./yalex/slr-f1.yal')
+scannerYal.scan()
 
+postfix = Postfix(scannerYal).toPostfix()
+#tree = Tree(postfix).build()
+
+direct = Direct()
+direct = direct.Direct(postfix) 
+
+with open('./tokens/f1.txt', 'r') as file:
+    contenido = file.read()
+
+simulation = Simulation(direct, contenido)
+scanner = ScannerYapar('./yapar/slr-f1.yalp')
+
+tokens, production, ignore = scanner.scan(scannerYal.tokens)
+
+lr0 = SLR(tokens,production,ignore, simulation, scannerYal.tokens)
+lr0.SLR()
+lr0.tabla()
+
+#print("\nSimulacion: " + contenido)
+#lr0.simulacion()

@@ -2,8 +2,8 @@
 import re
 
 class Set:
-    def __init__(self):
-        self.elements = []
+    def __init__(self, elements = None):
+        self.elements = elements if elements is not None else []
 
     def Intersection(self, leafs):
         intersection = Set()

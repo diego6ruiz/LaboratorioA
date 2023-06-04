@@ -51,7 +51,7 @@ class ScannerYapar:
                                 if (t.strip() in self.variablesYalex):
                                     self.tokens.append(t)
                                 else:
-                                    raise Exception('Token no definido en Yalex', t)
+                                    raise Exception('El token no esta definido en Yalex', t)
                                 
                         else:
                             if (token.strip() in self.variablesYalex):
@@ -90,4 +90,4 @@ class ScannerYapar:
                         pass
                     else:
                         production += symbol
-        return (self.tokens, self.productions)
+        return (self.tokens, self.productions, self.ignore)

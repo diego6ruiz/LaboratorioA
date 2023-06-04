@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\yalex"
+    "\\tokens",
+    "\\yalex",
+    "\\yapar"
   ],
-  "SelectedNode": "\\Sim.py",
   "PreviewInSolutionExplorer": false
 }
